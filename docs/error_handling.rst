@@ -38,6 +38,7 @@ Branch prediction is also mentioned in :ref:`happy_path_logic`,
 Below title 'Happy path is fast, error path is not'.
 Within the examination of a function with objdump, it can be proven.
 Used command : 'objdump -d src/init.o'
+
 .. code-block:: console
 
     src/init.o:     file format elf64-x86-64
