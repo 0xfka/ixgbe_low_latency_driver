@@ -3,6 +3,11 @@
 
 #include "base.h"
 #include "hw.h"
+
+#define IXGBE_SET_BITS(val, bits) ((val) |= (bits))
+#define IXGBE_CLEAR_BITS(val, bits) ((val) &= ~(bits))
+#define IXGBE_IS_SET(offset, mask)   (!!((offset) & (mask)))
+#define IXGBE_IS_CLEAR(offset, mask) (!((offset) & (mask)))
 /* Registers needed for 4.6.3 Initialization Sequence */
 
 /* Device Control Register */
