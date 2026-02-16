@@ -1,6 +1,7 @@
 #include <errno.h>
 #include <unistd.h>
 
+#include "../selftests/selftests.h"
 #include "base.h"
 #include "hw.h"
 #include "ixgbe.h"
@@ -31,6 +32,10 @@ int main(const int argc, char** argv) {
     return -err;
   }
   err = mmap_bar0(&ixgbe_adapter);
+  if (unlikely(err != 0)) {
+    return -err;
+  }
+  err = ixgbe_run_diagnostic(&ixgbe_adapter);
   if (unlikely(err != 0)) {
     return -err;
   }
