@@ -106,12 +106,26 @@
 
 /* Auto Negotiation Control Register */
 #define IXGBE_AUTOC 0x042A0
+/* Restart Auto Negotiation */
+#define IXGBE_AUTOC_RESTART 12
 /* Link Mode Select */
 #define IXGBE_AUTOC_LMS_SHIFT 13
 #define IXGBE_AUTOC_LMS_MASK (0x7 << IXGBE_AUTOC_LMS_SHIFT)
 
 /* Link Status Register */
 #define IXGBE_LINKS 0x042A4
+/* 10GbE Signal detection for KR or SFI */
+#define IXGBE_LINKS_SIG 12
+/* 10GbE Align status */
+#define IXGBE_LINKS_ALIGN 17
+/* MAC link speed status.
+00b = Reserved
+01b = 100 Mb/s
+10b = 1 GbE
+11b = 10 GbE */
+#define IXGBE_LINKS_SPEED_SHIFT 28
+#define IXGBE_LINKS_SPEED_MASK (0x3 << IXGBE_LINKS_SPEED_SHIFT)
+#define IXGBE_LINKS_UP 30
 
 /* Auto Negotiation Control 2 Register */
 #define IXGBE_AUTOC2 0x042A8

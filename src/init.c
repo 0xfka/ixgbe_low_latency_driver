@@ -47,20 +47,8 @@ eeprom_ok:
   }
   return -ETIMEDOUT;
 dmaiok:;
-  err = semaphore_acquire(hw, SW_PHY_SM0);
-  if (unlikely(err != 0)) return (int)err;
-  u32 autoc = ixgbe_read_reg(hw, IXGBE_AUTOC);
-  if (unlikely(autoc == 0xFFFFFFFF)) return -ENODEV;
-  IXGBE_CLEAR_BITS(autoc, IXGBE_AUTOC_LMS_MASK);
-  IXGBE_SET_BITS(autoc, 0x6 << IXGBE_AUTOC_LMS_SHIFT);
-  ixgbe_write_reg(hw, IXGBE_AUTOC, autoc);
-  err = ixgbe_read_reg(hw, IXGBE_AUTOC);
-  if (unlikely((err & IXGBE_AUTOC_LMS_MASK) != (autoc & IXGBE_AUTOC_LMS_MASK)))
-    return -EIO;
-  err = semaphore_release(hw, SW_PHY_SM0);
-  if (unlikely(err != 0)) return (int)err;
   /* Will be continued from sixth step of title '4.6.3 Initialization Sequence'.
-   */
+   * fifth step was skipped. */
   return 0;
 }
 /*
