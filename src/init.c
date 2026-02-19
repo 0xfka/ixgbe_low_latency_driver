@@ -49,6 +49,16 @@ eeprom_ok:
 dmaiok:;
   /* Will be continued from sixth step of title '4.6.3 Initialization Sequence'.
    * fifth step was skipped. */
+  /* As sixth step, 'Initialize all statistical counters', only GPRC, GPTC,
+   * TPR and TPT will be observed. Read operation provides resetting.
+   * This registers will be read from another core to debug receive/transmit
+   * steps.
+   */
+  (void)ixgbe_read_reg(hw, IXGBE_GPRC);
+  (void)ixgbe_read_reg(hw, IXGBE_GPTC);
+  (void)ixgbe_read_reg(hw, IXGBE_TPR);
+  (void)ixgbe_read_reg(hw, IXGBE_TPT);
+
   return 0;
 }
 /*

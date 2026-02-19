@@ -247,6 +247,16 @@
 /* Software _ Firmware Synchronization */
 #define IXGBE_SW_FW_SYNC 0x10160
 
+/* Trace registers start */
+/* Good Packets Received Count Register */
+#define IXGBE_GPRC 0x04074
+/* Good Packets Transmitted Count Register */
+#define IXGBE_GPTC 0x04080
+/* Total Packets Received Register */
+#define IXGBE_TPR 0x040D00
+/* Total Packets Transmitted Register */
+#define IXGBE_TPT 0x040D4
+
 #define IXGBE_SWFW_EEP_SM    (1 << 0)
 #define IXGBE_SWFW_PHY0_SM   (1 << 1)
 #define IXGBE_SWFW_PHY1_SM   (1 << 2)
