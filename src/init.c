@@ -113,8 +113,8 @@ int semaphore_acquire(const struct hw* hw, const ixgbe_swfw_sync_t acquire) {
   u32 delay = 10;
   u8 count = 0;
   u8 count_crit = 0;
-  constexpr u8 max_retr = 100;
-  constexpr u8 max_retr_crit = 3;
+  const u8 max_retr = 100;
+  const u8 max_retr_crit = 3;
 semaphore_main:
   /* ~19 ms at total. +~10ms means malfunctional behavior from Software. */
   delay = 10;
