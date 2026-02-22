@@ -8,7 +8,6 @@
 #define IXGBE_CLEAR_BITS(val, bits) ((val) &= ~(bits))
 #define IXGBE_IS_SET(offset, mask)   (!!((offset) & (mask)))
 #define IXGBE_IS_CLEAR(offset, mask) (!((offset) & (mask)))
-/* Registers needed for 4.6.3 Initialization Sequence */
 
 /* Device Control Register */
 #define IXGBE_CTRL 0x00000
@@ -123,11 +122,6 @@
 #define IXGBE_LINKS_SIG 12
 /* 10GbE Align status */
 #define IXGBE_LINKS_ALIGN 17
-/* MAC link speed status.
-00b = Reserved
-01b = 100 Mb/s
-10b = 1 GbE
-11b = 10 GbE */
 #define IXGBE_LINKS_SPEED_SHIFT 28
 #define IXGBE_LINKS_SPEED_MASK (0x3 << IXGBE_LINKS_SPEED_SHIFT)
 #define IXGBE_LINKS_UP 30
@@ -177,6 +171,7 @@
 
 /* Rx Filter ECC Err Insertion 0 */
 #define IXGBE_RXFECCERR0 0x051B8
+#define IXGBE_RXFECCERR0_ECCFLT_EN (1 << 9)
 
 /* VT Control Register */
 #define IXGBE_PFVTCTL 0x051B0
@@ -192,6 +187,7 @@
 
 /* Receive Address High */
 #define IXGBE_RAH 0x0A204
+#define IXGBE_RAH_AV (1U << 31)
 
 /* MAC Pool Select Array */
 #define IXGBE_MPSAR 0x0A600
@@ -287,26 +283,6 @@
 #define IXGBE_TPR 0x040D00
 /* Total Packets Transmitted Register */
 #define IXGBE_TPT 0x040D4
-
-/* Receive Initialization */
-/* Receive Address Low — RAL[n] + 8*n,n=0...127 */
-#define IXGBE_RAL 0x0A200
-/* Receive Address High — RAH[n] + 8*n, n=0...127 */
-#define IXGBE_RAH 0x0A204
-#define IXGBE_RAH_AV (1U << 31)
-/* PF Unicast Table Array — PFUTA[n] + 4*n,n=0...127 */
-#define IXGBE_PFUTA 0x0F400
-/* VLAN Filter Table Array — VFTA[n] + 4*n, n=0...127 */
-#define IXGBE_VFTA 0x0A000
-/* PF VM VLAN Pool Filter — PFVLVF[n] + 4*n,n=0...63 */
-#define IXGBE_PFVLVF 0x0F100
-/* MAC Pool Select Array — MPSAR[n] + 4*n,n=0...255 */
-#define IXGBE_MPSAR 0x0A600
-/* PF VM VLAN Pool Filter Bitmap — PFVLVFB[n] + 4*n, n=0...127 */
-#define IXGBE_PFVLVFB 0x0F200
-/* Rx Filter ECC Err Insertion 0 */
-#define IXGBE_RXFECCERR0 0x051B8
-#define IXGBE_RXFECCERR0_ECCFLT_EN (1 << 9)
 
 #define IXGBE_SWFW_EEP_SM    (1 << 0)
 #define IXGBE_SWFW_PHY0_SM   (1 << 1)
