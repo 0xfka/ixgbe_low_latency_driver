@@ -209,6 +209,8 @@
 
 /* Split Receive Control Registers */
 #define IXGBE_SRRCTL 0x01014
+#define IXGBE_SRRCTL_BSIZEPACKET 0x0000000F /* Bits 4:0 */
+#define IXGBE_SRRCTL_DESCTYPE 0x0E000000 /* Bits 27:25*/
 
 /* Redirection Table */
 #define IXGBE_RETA 0x0EB00

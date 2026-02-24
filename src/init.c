@@ -163,6 +163,13 @@ dmaiok:;
   read_val = ixgbe_read_reg(hw, IXGBE_MPSAR);
   IXGBE_SET_BITS(read_val, (1 << 0));
   ixgbe_write_reg(hw, IXGBE_MPSAR, read_val);
+  /* Set receive buffer sizes */
+  read_val = ixgbe_read_reg(hw,IXGBE_SRRCTL);
+  IXGBE_CLEAR_BITS(read_val, IXGBE_SRRCTL_BSIZEPACKET);
+  IXGBE_SET_BITS(read_val, 1 << 1);
+  IXGBE_CLEAR_BITS(read_val, IXGBE_SRRCTL_DESCTYPE);
+  IXGBE_SET_BITS(read_val, 1 << 27);
+  ixgbe_write_reg(hw, IXGBE_SRRCTL, read_val);
   return 0;
 }
 /*
