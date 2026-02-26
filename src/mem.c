@@ -9,7 +9,7 @@
 #include "hw.h"
 /*
  * Alloc 2 MB hugepage. Requires at least 1 available 2 MB hugepage on host
- * kernel. Writes virtual mem addr to rx_base in hw structure.
+ * kernel. Dividing the same hugepage is aiming to reduce TLB misses.
  */
 int alloc_hugepage(struct hw* hw) {
   int save_errno;
@@ -22,6 +22,7 @@ int alloc_hugepage(struct hw* hw) {
   };
   memset(dma, 0, 2 * 1024 * 1024);
   hw->rx_base = dma;
+  hw->tx_base = (u8*)dma + (1 * 1024 * 1024);
   return 0;
 }
 /*
