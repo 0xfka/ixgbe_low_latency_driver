@@ -6,6 +6,7 @@
 #include <sys/mman.h>
 #include <unistd.h>
 
+#include "base.h"
 #include "hw.h"
 /*
  * Alloc 2 MB hugepage. Requires at least 1 available 2 MB hugepage on host
@@ -22,7 +23,7 @@ int alloc_hugepage(struct hw* hw) {
   };
   memset(dma, 0, 2 * 1024 * 1024);
   hw->rx_base = dma;
-  hw->tx_base = (u8*)dma + (1 * 1024 * 1024);
+  hw->tx_base = (u8*)dma + (1 * 128 * 1024);
   return 0;
 }
 /*
