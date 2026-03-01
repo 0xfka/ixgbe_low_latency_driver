@@ -192,6 +192,9 @@ int semaphore_acquire(const struct hw* hw, const ixgbe_swfw_sync_t acquire) {
   const u8 max_retr = 100;
   const u8 max_retr_crit = 3;
 semaphore_main:
+    /* Reset malfunction flags to prevent entering workaround unnecessarily*/
+     fw_malfunction = false;
+     sw_malfunction = false;
   /* ~19 ms at total. +~10ms means malfunctional behavior from Software. */
   delay = 10;
   for (u8 i = 0; i < 25; i++) {
