@@ -3,6 +3,32 @@
 
 #include "base.h"
 #include "hw.h"
+#define BUFFER_SIZE 2048 
+#define BUFFER_NUMBER 512 /* Must give -1 to NIC for head==tail*/
+#define BUFFER_BASE 2 * 128 * 1024 
+#define IXGBE_RXD_STAT_DD    0x01  /* Descriptor Done */
+#define IXGBE_RXD_STAT_EOP   0x02  /* End of Packet */
+#define NUM_DESC     512
+#define DESC_SIZE    32
+#define RDLEN_VAL    0x4000
+
+union ixgbe_adv_rx_desc {
+struct {
+  u64 pkt_addr; /* Packet buffer address */
+  u64 hdr_addr; /* Header buffer address */
+  u64 padding;
+  u64 padding2;
+  } read;
+  struct {
+  u64 padding;
+  volatile u32 status_error; 
+  u16 length;       
+  u16 vlan;         
+  u32 rss;          
+  u32 pkt_info;     
+    } wb; 
+};
+extern union ixgbe_adv_rx_desc desc;
 
 #define IXGBE_SET_BITS(val, bits) ((val) |= (bits))
 #define IXGBE_CLEAR_BITS(val, bits) ((val) &= ~(bits))
@@ -21,6 +47,7 @@
 
 /* Extended Device Control Register */
 #define IXGBE_CTRL_EXT 0x00018
+#define IXGBE_CTRL_EXT_NS_DIS (1 << 16)
 
 /* Extended Interrupt Cause Register */
 #define IXGBE_EICR 0x00800
@@ -194,6 +221,8 @@
 
 /* Receive Descriptor Base Address Low */
 #define IXGBE_RDBAL 0x01000
+/* Receive Descriptor Base Address High */
+#define IXGBE_RDBAH 0x01004
 
 /* Receive Descriptor Length */
 #define IXGBE_RDLEN 0x01008
@@ -206,6 +235,8 @@
 
 /* Receive Descriptor Control */
 #define IXGBE_RXDCTL 0x01028
+#define IXGBE_RXDCTL_RX_EN  (1 << 25)
+#define IXGBE_RXDCTL_VME    (1 << 30)
 
 /* Split Receive Control Registers */
 #define IXGBE_SRRCTL 0x01014
@@ -260,12 +291,15 @@
 
 /* Security Rx Control */
 #define IXGBE_SECRXCTRL 0x08D00
+#define IXGBE_SECRXCTRL_RX_DIS (1 << 1)
 
 /* Security Rx Status */
 #define IXGBE_SECRXSTAT 0x08D04
 
 /* DCA Rx Control Register */
 #define IXGBE_DCA_RXCTRL 0x0100C
+/* Rezerved, but needs to be 0 */
+#define IXGBE_DCA_RXCTRL_SET_TO_0 (1 << 12)
 
 /* Semaphore Register */
 #define IXGBE_SWSM 0x10140
@@ -285,6 +319,8 @@
 #define IXGBE_TPR 0x040D00
 /* Total Packets Transmitted Register */
 #define IXGBE_TPT 0x040D4
+/* Rx Missed Packet Count*/
+#define IXGBE_RXMPC 0x03FA0
 
 #define IXGBE_SWFW_EEP_SM    (1 << 0)
 #define IXGBE_SWFW_PHY0_SM   (1 << 1)
@@ -329,5 +365,6 @@ int ixgbe_probe(const struct hw* hw);
 int semaphore_acquire(const struct hw* hw,ixgbe_swfw_sync_t);
 int semaphore_release(const struct hw* hw,ixgbe_swfw_sync_t);
 void master_disable_workaround(const struct hw* hw);
+int rx_ring_probe(const struct hw* hw);
 
 #endif
