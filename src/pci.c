@@ -1,3 +1,4 @@
+#include <assert.h>
 #include <errno.h>
 #include <fcntl.h>
 #include <stdio.h>
@@ -63,6 +64,37 @@ int unbind(const char* pci, const char* target_drv) {
   if (unlikely(fd < 0)) return (errno ? errno : EIO);
   w = write(fd, pci, pci_len);
   if (unlikely(w != (ssize_t)pci_len)) {
+    save_errno = errno;
+    close(fd);
+    return -(save_errno ? save_errno : EIO);
+  }
+  close(fd);
+  /* Enable DMA */
+  len = snprintf(path, sizeof(path),"/sys/bus/pci/devices/%s/config",pci);
+  if (unlikely(len < 0)) return -EINVAL;
+  if (unlikely((size_t)len >= sizeof(path))) return -ENAMETOOLONG;
+  fd = open(path, O_RDWR);
+  if (unlikely(fd < 0)) {
+    return -(errno ? errno : EIO);
+  }
+  if (lseek(fd, 4, SEEK_SET) != 4){
+    save_errno = errno;
+    close(fd);
+    return -(save_errno ? save_errno : EIO);
+  }
+  u16 read_val = 0;
+  if (read(fd, &read_val, 2) != 2){
+    save_errno = errno;
+    close(fd);
+    return -(save_errno ? save_errno : EIO);
+  }
+  read_val |= 1 << 2;
+  if (lseek(fd, 4, SEEK_SET) != 4){
+    save_errno = errno;
+    close(fd);
+    return -(save_errno ? save_errno : EIO);
+  }
+  if (write(fd, &read_val, 2) != 2){
     save_errno = errno;
     close(fd);
     return -(save_errno ? save_errno : EIO);

@@ -9,6 +9,7 @@ struct hw {
   u64 rx_base_phy;
   u32 rx_head;
   u32 rx_tail;
+  void* tx_base;
   volatile u32* rdt_reg_addr;
   volatile u32* rdh_reg_addr;
 };
