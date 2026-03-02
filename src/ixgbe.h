@@ -11,7 +11,8 @@
 #define NUM_DESC     512
 #define DESC_SIZE    32
 #define RDLEN_VAL    0x4000
-
+   #define IXGBE_BUFFER_ADVANCE(current_val, add_val) \
+       (((current_val) + (add_val)) & (BUFFER_NUMBER - 1))
 union ixgbe_adv_rx_desc {
 struct {
   u64 pkt_addr; /* Packet buffer address */

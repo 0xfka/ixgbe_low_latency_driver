@@ -52,9 +52,38 @@ int main(const int argc, char** argv) {
   u32 read_val = ixgbe_read_reg(&ixgbe_adapter, IXGBE_AUTOC);
   IXGBE_SET_BITS(read_val, IXGBE_AUTOC_RESTART);
   ixgbe_write_reg(&ixgbe_adapter, IXGBE_AUTOC, read_val);
+  /* This register is used for updating ring buffer location on every x bytes. 
+  * 128 is a placeholder, a number will be decided after benchmarks. */
+  u32 batch_manage_tail = 128;
+  u32 batch_manage_tail_counter = 0;
+  u32 total_packets = 0;
+  u32 print_counter = 0;
+
+  u32 i = ixgbe_read_reg(&ixgbe_adapter, IXGBE_RDH);
   while(1){
     barrier();
-    if(likely(rx_ring[0].wb.status_error & IXGBE_RXD_STAT_DD)){
+    if(likely(rx_ring[i].wb.status_error & IXGBE_RXD_STAT_DD)){
+      rmb();
+      batch_manage_tail_counter++;
+      total_packets++;
+      /* Disabled for testing ring buffer behaviour */
+      /* This PoC only includes ICMP. */
+      /* if(unlikely(rx_ring[i].wb.pkt_info != 0)){
+        break;
+      } */
+      u8* pkt = (u8*)ixgbe_adapter.rx_base + (256 * 1024) + ( i * 2048);
+      if(unlikely(total_packets == 256)){
+        printf("256 packet, %x\n", print_counter);
+        print_counter++;
+        total_packets = 0;
+      }
+      if(unlikely(batch_manage_tail_counter == batch_manage_tail)){
+        ixgbe_write_reg(&ixgbe_adapter, IXGBE_RDT, i);
+        batch_manage_tail_counter = 0;
+      }
+      /* Reset Descriptor Done */
+      rx_ring[i].wb.status_error &= ~IXGBE_RXD_STAT_DD;
+      i = IXGBE_BUFFER_ADVANCE(i, 1);
   }
   }
 }
