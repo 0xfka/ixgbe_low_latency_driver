@@ -55,22 +55,6 @@ int main(const int argc, char** argv) {
   while(1){
     barrier();
     if(likely(rx_ring[0].wb.status_error & IXGBE_RXD_STAT_DD)){
-      /*
-      * Temporary for proving current situation.
-      * A packet can be captured with ./driver <pci-addr> > filename, which will be raw hexadecimal.
-      * Currently we lack of head-tail management logic, means it'll drop packets after buffers are end.
-      * When tested, the captured packet was DHCP request, sent by the second port which was in still kernel's control.
-      * This was because global reset also affects it.
-      */
-      u8* pkt = (u8*)ixgbe_adapter.rx_base + (256 * 1024) + ( 0 * 2048);
-      u32 i;
-         for (i = 0; i < rx_ring[0].wb.length; i++){
-       printf("%02x ", pkt[i]);
-         }
-               if(rx_ring[0].wb.status_error & IXGBE_RXD_STAT_EOP){
-        printf("EOP");
-        return 0;
-      }
   }
   }
 }
