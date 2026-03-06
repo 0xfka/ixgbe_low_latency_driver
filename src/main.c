@@ -65,7 +65,8 @@ int main(const int argc, char** argv) {
   u32 batch_manage_tail_counter = 0;
   u32 total_packets = 0;
   u32 irrelevant_packets = 0;
-
+  u32 batch_tx_counter = 0;
+  u32 batch_tx_transmit = 7;
   u32 i = ixgbe_read_reg(&ixgbe_adapter, IXGBE_RDH);
   while(1){
     barrier();
@@ -108,10 +109,16 @@ int main(const int argc, char** argv) {
       tx_desc->data_read.dext = 1;
       tx_desc->data_read.dd = 0;
       wmb();
-      ixgbe_write_reg(&ixgbe_adapter, IXGBE_TDT, i + 1 );
       /* Reset Descriptor Done */
       rx_ring[i].wb.status_error &= ~IXGBE_RXD_STAT_DD;
+      tx_ring[i].data_read.dd = 0;
       i = IXGBE_BUFFER_ADVANCE(i, 1);
+      if(unlikely(batch_tx_counter >= batch_tx_transmit)){
+      ixgbe_write_reg(&ixgbe_adapter, IXGBE_TDT, i);
+      batch_tx_counter = 0;
+      } else {
+      batch_tx_counter++;
+      }
       printf("tail : %u\n", ixgbe_read_reg(&ixgbe_adapter,IXGBE_TDT));
       printf("head : %u\n", ixgbe_read_reg(&ixgbe_adapter,IXGBE_TDH));
   }
