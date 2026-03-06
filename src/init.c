@@ -46,6 +46,7 @@ int ixgbe_probe(const struct hw* hw) {
   }
   if (unlikely(IXGBE_IS_SET(err, (IXGBE_CTRL_RST | IXGBE_CTRL_LRST))))
     return -ETIMEDOUT;
+  clock_switching_workaround(hw);
   /* Reset delay value since it'll continue from Global Reset. */
   delay = 10;
   for (u8 i = 0; i < 23; i++) {

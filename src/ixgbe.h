@@ -26,7 +26,7 @@ struct ip_hdr {
 #define NUM_DESC     512
 #define DESC_SIZE    32
 #define RDLEN_VAL    0x4000
-#define TDLEN_VAL    0x16384
+#define TDLEN_VAL    16384
    #define IXGBE_BUFFER_ADVANCE(current_val, add_val) \
        (((current_val) + (add_val)) & (BUFFER_NUMBER - 1))
 union ixgbe_adv_rx_desc {
@@ -230,7 +230,7 @@ extern union ixgbe_adv_tx_desc tx_desc;
 
 /* DMA Tx Control */
 #define IXGBE_DMATXCTL 0x04A80
-#define IXGBE_DMATXCTL_TE (1 << 1)
+#define IXGBE_DMATXCTL_TE (1 << 0)
 
 /* Receive Checksum Control */
 #define IXGBE_RXCSUM 0x05000
@@ -463,5 +463,6 @@ int semaphore_release(const struct hw* hw,ixgbe_swfw_sync_t);
 void master_disable_workaround(const struct hw* hw);
 int rx_ring_probe(const struct hw* hw);
 int tx_ring_probe(const struct hw* hw);
+void clock_switching_workaround(const struct hw* hw);
 
 #endif

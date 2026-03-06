@@ -55,6 +55,22 @@ int tx_ring_probe(const struct hw* hw){
     usleep(delay);
     if (likely(delay < 1000)) delay *= 2;
   }
+  return -ETIMEDOUT;
   tx_ready:;
   return 0;
+}
+
+  /* According to errata 13, rev 4.3.3,
+   * Changes in the internal link-speed might hang transmit.
+   * This function issues the workaround specified. Should be called if
+   * Tx cannot be initialized.
+  */
+void clock_switching_workaround(const struct hw* hw){
+  u32 read_val = ixgbe_read_reg(hw, IXGBE_AUTOC2);
+  /* 19th bit is reserved ( undocumented ) in datasheet, but errata says
+  * it delays link-up flow by 10 microseconds. Probably a register used to be internal,
+  * but published in errata...
+  */
+  IXGBE_SET_BITS(read_val,(1 << 19));
+  ixgbe_write_reg(hw, IXGBE_AUTOC2, read_val);
 }

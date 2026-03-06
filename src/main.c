@@ -1,5 +1,6 @@
 #include <errno.h>
 #include <stdio.h>
+#include <string.h>
 #include <unistd.h>
 
 #include "../selftests/selftests.h"
@@ -95,9 +96,24 @@ int main(const int argc, char** argv) {
         ixgbe_write_reg(&ixgbe_adapter, IXGBE_RDT, i);
         batch_manage_tail_counter = 0;
       }
+      u64 transmit = ixgbe_adapter.rx_base_phy + (256 * 1024) + ( i * 2048);
+      union ixgbe_adv_tx_desc *tx_desc = &tx_ring[i];
+      tx_desc->data_read.address = transmit;
+      tx_desc->data_read.dtalen = 84;
+      tx_desc->data_read.paylen = 84;
+      tx_desc->data_read.dtyp = 3;
+      tx_desc->data_read.rs = 1;
+      tx_desc->data_read.eop = 1;
+      tx_desc->data_read.ifcs = 1;
+      tx_desc->data_read.dext = 1;
+      tx_desc->data_read.dd = 0;
+      wmb();
+      ixgbe_write_reg(&ixgbe_adapter, IXGBE_TDT, i + 1 );
       /* Reset Descriptor Done */
       rx_ring[i].wb.status_error &= ~IXGBE_RXD_STAT_DD;
       i = IXGBE_BUFFER_ADVANCE(i, 1);
+      printf("tail : %u\n", ixgbe_read_reg(&ixgbe_adapter,IXGBE_TDT));
+      printf("head : %u\n", ixgbe_read_reg(&ixgbe_adapter,IXGBE_TDH));
   }
   }
 }
