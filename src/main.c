@@ -100,12 +100,23 @@ int main(const int argc, char** argv) {
       */
       u8* pkt = (u8*)ixgbe_adapter.rx_base + (256 * 1024) + ( i * 2048);
       struct eth_hdr *eth = (struct eth_hdr *)pkt;
+      /* ABOUT PRINT USAGES ON DATAPATH
+      * Of course we are not going to use print on datapath,
+      * but in the development of the ring buffer and ICMP logic, 
+      * they are the only debugging data until we can hit packets to wire.
+      * They'll not be removed completely since we may need them again, 
+      * but including them will be decided on compile time,
+      * which means they have zero affect to the datapath when compiled without 
+      * related flag.
+      */
+
+      /*
       u8* src_mac = eth->src_mac;
       printf("source mac address: %0x:%0x:%0x:%0x:%0x:%0x\n", src_mac[0], src_mac[1], src_mac[2], src_mac[3], src_mac[4], src_mac[5]);
       u8* dst_mac = eth->dst_mac;
       printf("destination mac address: %0x:%0x:%0x:%0x:%0x:%0x\n", dst_mac[0], dst_mac[1], dst_mac[2], dst_mac[3], dst_mac[4], dst_mac[5]);
       struct ip_hdr *ip = (struct ip_hdr *)(pkt + sizeof(struct eth_hdr));
-      u32 src_ip = __builtin_bswap32(ip->src_addr); /* See little endian/big endian byte orders.*/
+      u32 src_ip = __builtin_bswap32(ip->src_addr); See little endian/big endian byte orders.
       printf("source ip addrress: %0x\n", src_ip);
       u32 dst_ip = __builtin_bswap32(ip->dst_addr);
       printf("destination ip address: %0x\n",dst_ip);
@@ -161,8 +172,10 @@ int main(const int argc, char** argv) {
       } else {
       batch_tx_counter++;
       }
+      /*
       printf("tail : %u\n", ixgbe_read_reg(&ixgbe_adapter,IXGBE_TDT));
       printf("head : %u\n", ixgbe_read_reg(&ixgbe_adapter,IXGBE_TDH));
-  }
+      */
+      }
   }
 }
