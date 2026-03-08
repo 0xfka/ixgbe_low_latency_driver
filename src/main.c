@@ -1,6 +1,4 @@
 #include <errno.h>
-#include <stdio.h>
-#include <string.h>
 #include <unistd.h>
 #include <arpa/inet.h>
 #include <xmmintrin.h>
@@ -10,6 +8,7 @@
 #include "hw.h"
 #include "ixgbe.h"
 #include "pci.h"
+#include "debug.h"
 struct hw ixgbe_adapter __attribute__((aligned(64))) = {0};
 union ixgbe_adv_rx_desc ixgbe_adv_rx_desc __attribute__((aligned(64))) = {0};
 union ixgbe_adv_tx_desc ixgbe_adv_tx_desc __attribute__((aligned(64))) = {0};
@@ -96,27 +95,21 @@ int main(const int argc, char** argv) {
       */
       u8* pkt = (u8*)ixgbe_adapter.rx_base + (256 * 1024) + ( i * 2048);
       struct eth_hdr *eth = (struct eth_hdr *)pkt;
-      /* ABOUT PRINT USAGES ON DATAPATH
-      * Of course we are not going to use print on datapath,
-      * but in the development of the ring buffer and ICMP logic, 
-      * they are the only debugging data until we can hit packets to wire.
-      * They'll not be removed completely since we may need them again, 
-      * but including them will be decided on compile time,
-      * which means they have zero affect to the datapath when compiled without 
-      * related flag.
-      */
-
-      /*
+      /* Definations below are useless when the debug flag is not set.
+       * With compiler optimization is enabled, it can be optimized by the compiler,
+       * but we also doesn't use it. A solution will be decided.
+       * Probably make command will be splitted to development and release,
+       * and optimizations will be used on release.
+       */
       u8* src_mac = eth->src_mac;
-      printf("source mac address: %0x:%0x:%0x:%0x:%0x:%0x\n", src_mac[0], src_mac[1], src_mac[2], src_mac[3], src_mac[4], src_mac[5]);
+      DPRINT("source mac address: %0x:%0x:%0x:%0x:%0x:%0x\n", src_mac[0], src_mac[1], src_mac[2], src_mac[3], src_mac[4], src_mac[5]);
       u8* dst_mac = eth->dst_mac;
-      printf("destination mac address: %0x:%0x:%0x:%0x:%0x:%0x\n", dst_mac[0], dst_mac[1], dst_mac[2], dst_mac[3], dst_mac[4], dst_mac[5]);
+      DPRINT("destination mac address: %0x:%0x:%0x:%0x:%0x:%0x\n", dst_mac[0], dst_mac[1], dst_mac[2], dst_mac[3], dst_mac[4], dst_mac[5]);
       struct ip_hdr *ip = (struct ip_hdr *)(pkt + sizeof(struct eth_hdr));
-      u32 src_ip = __builtin_bswap32(ip->src_addr); See little endian/big endian byte orders.
-      printf("source ip addrress: %0x\n", src_ip);
+      u32 src_ip = __builtin_bswap32(ip->src_addr); /* See little endian/big endian byte orders. */
+      DPRINT("source ip addrress: %0x\n", src_ip);
       u32 dst_ip = __builtin_bswap32(ip->dst_addr);
-      printf("destination ip address: %0x\n",dst_ip);
-      */
+      DPRINT("destination ip address: %0x\n",dst_ip);
       if(unlikely(batch_manage_tail_counter >= batch_manage_tail)){
         ixgbe_write_reg(&ixgbe_adapter, IXGBE_RDT, i);
         batch_manage_tail_counter = 0;
@@ -169,10 +162,8 @@ int main(const int argc, char** argv) {
       } else {
       batch_tx_counter++;
       }
-      /*
-      printf("tail : %u\n", ixgbe_read_reg(&ixgbe_adapter,IXGBE_TDT));
-      printf("head : %u\n", ixgbe_read_reg(&ixgbe_adapter,IXGBE_TDH));
-      */
+      DPRINT("tail : %u\n", ixgbe_read_reg(&ixgbe_adapter,IXGBE_TDT));
+      DPRINT("head : %u\n", ixgbe_read_reg(&ixgbe_adapter,IXGBE_TDH));
       }
   }
 }
