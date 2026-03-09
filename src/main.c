@@ -141,15 +141,13 @@ int main(const int argc, char** argv) {
       eth->h_dest[j] = tmp;
       }
       /* Swap IP's */
-      u32 *src_ip_ptr = (u32*)(pkt + 26);
-      u32 *dst_ip_ptr = (u32*)(pkt + 30);
-      u32 tmp_ip = *src_ip_ptr;
-      *src_ip_ptr = *dst_ip_ptr;
-      *dst_ip_ptr = tmp_ip;
+      u32 tmp_ip = ip->daddr;
+      ip->daddr = ip->saddr;
+      ip->saddr = tmp_ip;
       /* Change type to reply on ICMP */
-      struct icmphdr *icmp = (struct icmphdr *)(pkt + sizeof(struct ethhdr) + sizeof(struct iphdr));
-      if(likely(pkt[34] == 8)){
-        pkt[34] = 0;
+      struct icmphdr *icmp = (struct icmphdr *)(pkt + sizeof(struct ethhdr) + ip->ihl * 4);
+      if(likely(icmp->type == 8)){
+        icmp->type = 0;
       /* Calcucate new checksum withto RFC 1624 */
       u32 chk_new = ntohs(icmp->checksum) + 0x0800;
       if (unlikely(chk_new > 0xFFFF))
