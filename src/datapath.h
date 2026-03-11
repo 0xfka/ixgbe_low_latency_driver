@@ -16,10 +16,8 @@ static inline bool ping_reply(struct ethhdr* eth,struct iphdr* ip, struct icmphd
         stats->irrelevant_packets++;
         return false;
       }
-      DPRINT("irrelevant packets : %u\n", stats->irrelevant_packets);
       /* After the checks, there's no branch before transmitting. */
       stats->total_bytes_tx = stats->total_bytes_tx + ip->tot_len;
-      DPRINT("total bytes on Tx %u\n", stats->total_bytes_tx);
       /* Swap MAC's */
       for (int j = 0; j < 6; j++) {
       u8 tmp = eth->h_source[j];

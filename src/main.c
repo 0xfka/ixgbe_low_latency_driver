@@ -13,7 +13,6 @@
 #include "ixgbe.h"
 #include "pci.h"
 #include "datapath.h"
-#include "debug.h"
 struct hw ixgbe_adapter __attribute__((aligned(64))) = {0};
 static struct ixgbe_stats stats = {0};
 static union ixgbe_adv_rx_desc ixgbe_adv_rx_desc __attribute__((aligned(64))) = {0};
@@ -92,35 +91,19 @@ int main(const int argc, char** argv) {
       */
       u8* pkt = (u8*)ixgbe_adapter.rx_base + (256 * 1024) + ( i * 2048);
       struct ethhdr *eth = (struct ethhdr *)pkt;
-      /* Definitions below are useless when the debug flag is not set.
-       * With compiler optimization is enabled, it can be optimized by the compiler,
-       * but we also doesn't use it. A solution will be decided.
-       * Probably make command will be splitted to development and release,
-       * and optimizations will be used on release.
-       */
       u8* h_source = eth->h_source;
-      DPRINT("source mac address: %0x:%0x:%0x:%0x:%0x:%0x\n", h_source[0], h_source[1], h_source[2], h_source[3], h_source[4], h_source[5]);
       u8* d_source = eth->h_dest;
-      DPRINT("destination mac address: %0x:%0x:%0x:%0x:%0x:%0x\n", d_source[0], d_source[1], d_source[2], d_source[3], d_source[4], d_source[5]);
       struct iphdr *ip = (struct iphdr *)(pkt + sizeof(struct ethhdr));
       stats.total_bytes_rx = stats.total_bytes_rx + ip->tot_len;
-      DPRINT("irrelevant packets : %u\n", stats.irrelevant_packets);
-      DPRINT("total bytes on Rx %u\n", stats.total_bytes_rx);
       u32 src_ip = __builtin_bswap32(ip->saddr); /* See little endian/big endian byte orders. */
-      DPRINT("source ip addrress: %0x\n", src_ip);
       u32 dst_ip = __builtin_bswap32(ip->daddr);
-      DPRINT("destination ip address: %0x\n",dst_ip);
       if(unlikely(stats.batch_manage_tail_counter >= stats.batch_manage_tail)){
         ixgbe_write_reg(&ixgbe_adapter, IXGBE_RDT, i);
         stats.batch_manage_tail_counter = 0;
       }
-      /* PoC data path 
-      */
-      /* IPv6 may be added but not included for now */
       struct icmphdr *icmp = (struct icmphdr *)(pkt + sizeof(struct ethhdr) + ip->ihl * 4);
       bool processed = ping_reply(eth, ip, icmp, &stats, i, rx_ring, tx_ring);
       wmb();
-      /* Reset Descriptor Done */
       rx_ring[i].wb.status_error &= ~IXGBE_RXD_STAT_DD;
       rx_ring[i].read.pkt_addr = (u64)ixgbe_adapter.rx_base_phy + (256 * 1024) + (i * 2048);
       rx_ring[i].read.hdr_addr = 0;
@@ -135,8 +118,6 @@ int main(const int argc, char** argv) {
       } else {
       stats.batch_tx_counter++;
       }
-      DPRINT("tail : %u\n", ixgbe_read_reg(&ixgbe_adapter,IXGBE_TDT));
-      DPRINT("head : %u\n", ixgbe_read_reg(&ixgbe_adapter,IXGBE_TDH));
       }
   }
 }
