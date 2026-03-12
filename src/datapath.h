@@ -1,51 +1,34 @@
 #ifndef DATAPATH_H
 #define DATAPATH_H
-#include "base.h"
 #include "debug.h"
 #include "ixgbe.h"
 #include <linux/if_ether.h>
 #include <netinet/ip.h>
 #include <netinet/ip_icmp.h>
-typedef enum {
-    PROTO_UNKNOWN = 0,
-    PROTO_ICMP    = IPPROTO_ICMP,
-    PROTO_TCP     = IPPROTO_TCP,
-    PROTO_UDP     = IPPROTO_UDP,
-    PROTO_UNSUPPORTED = 254
-} datapath_proto_t;
-struct pkt_ctx {
-  u8                 *pkt;
-  struct ethhdr      *eth;
-  struct iphdr       *ip;
-  struct ixgbe_stats *stats;
-  u32                 len;
-  datapath_proto_t    proto;
-};
-static inline bool ping_reply(struct pkt_ctx* ctx,int i,union ixgbe_adv_rx_desc* rx_ring, union ixgbe_adv_tx_desc* tx_ring){
-     if(unlikely(ctx->ip->version != 4)){
+static inline bool ping_reply(struct ethhdr* eth,struct iphdr* ip, struct icmphdr* icmp,struct ixgbe_stats* stats,int i,union ixgbe_adv_rx_desc* rx_ring, union ixgbe_adv_tx_desc* tx_ring){
+     if(unlikely(ip->version != 4)){
         rx_ring[i].wb.status_error = 0;
-        ctx->stats->irrelevant_packets++;
+        stats->irrelevant_packets++;
         return false;
       }
-      if(unlikely((ctx->ip->protocol != 1))){
+      if(unlikely((ip->protocol != 1))){
         rx_ring[i].wb.status_error = 0;
-        ctx->stats->irrelevant_packets++;
+        stats->irrelevant_packets++;
         return false;
       }
       /* After the checks, there's no branch before transmitting. */
-      ctx->stats->total_bytes_tx = ctx->stats->total_bytes_tx + ctx->ip->tot_len;
+      stats->total_bytes_tx = stats->total_bytes_tx + ip->tot_len;
       /* Swap MAC's */
       for (int j = 0; j < 6; j++) {
-      u8 tmp = ctx->eth->h_source[j];
-      ctx->eth->h_source[j] = ctx->eth->h_dest[j];
-      ctx->eth->h_dest[j] = tmp;
+      u8 tmp = eth->h_source[j];
+      eth->h_source[j] = eth->h_dest[j];
+      eth->h_dest[j] = tmp;
       }
       /* Swap IP's */
-      u32 tmp_ip = ctx->ip->daddr;
-      ctx->ip->daddr = ctx->ip->saddr;
-      ctx->ip->saddr = tmp_ip;
+      u32 tmp_ip = ip->daddr;
+      ip->daddr = ip->saddr;
+      ip->saddr = tmp_ip;
       /* Change type to reply on ICMP */
-      struct icmphdr *icmp = (struct icmphdr *)(ctx->pkt + sizeof(struct ethhdr) + ctx->ip->ihl * 4);
       if(likely(icmp->type == 8)){
         icmp->type = 0;
       /* Calculate new checksum with RFC 1624 */

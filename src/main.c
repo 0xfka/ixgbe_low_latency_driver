@@ -9,15 +9,15 @@
 
 #include "../selftests/selftests.h"
 #include "base.h"
-#include "datapath_clean.h"
 #include "hw.h"
 #include "ixgbe.h"
 #include "pci.h"
 #include "datapath.h"
-#include "rx.h"
 struct hw ixgbe_adapter __attribute__((aligned(64))) = {0};
 static struct ixgbe_stats stats = {0};
-static struct pkt_ctx pkt_ctx __attribute__((aligned(64))) = {0};
+static union ixgbe_adv_rx_desc ixgbe_adv_rx_desc __attribute__((aligned(64))) = {0};
+static union ixgbe_adv_tx_desc ixgbe_adv_tx_desc __attribute__((aligned(64))) = {0};
+
 int main(const int argc, char** argv) {
   int err;
   err = ixgbe_test_ds();
@@ -80,7 +80,6 @@ int main(const int argc, char** argv) {
   */
   stats.batch_tx_transmit = 0;
   u32 i = ixgbe_read_reg(&ixgbe_adapter, IXGBE_RDH);
-  pkt_ctx.stats = &stats;
   while(1){
     barrier();
     if(likely(rx_ring[i].wb.status_error & IXGBE_RXD_STAT_DD)){
@@ -91,15 +90,34 @@ int main(const int argc, char** argv) {
       * Since the driver cannot reply ARP's, static ARP configuration needed.
       */
       u8* pkt = (u8*)ixgbe_adapter.rx_base + (256 * 1024) + ( i * 2048);
-      pkt_ctx.pkt = pkt;
-      u8 proto = rx_entry(&pkt_ctx, i, rx_ring);
-      bool processed = false;
-      switch (proto) {
-        case PROTO_ICMP: processed = ping_reply(&pkt_ctx,i, rx_ring, tx_ring);
+      struct ethhdr *eth = (struct ethhdr *)pkt;
+      u8* h_source = eth->h_source;
+      u8* d_source = eth->h_dest;
+      struct iphdr *ip = (struct iphdr *)(pkt + sizeof(struct ethhdr));
+      stats.total_bytes_rx = stats.total_bytes_rx + ip->tot_len;
+      u32 src_ip = __builtin_bswap32(ip->saddr); /* See little endian/big endian byte orders. */
+      u32 dst_ip = __builtin_bswap32(ip->daddr);
+      if(unlikely(stats.batch_manage_tail_counter >= stats.batch_manage_tail)){
+        ixgbe_write_reg(&ixgbe_adapter, IXGBE_RDT, i);
+        stats.batch_manage_tail_counter = 0;
       }
+      struct icmphdr *icmp = (struct icmphdr *)(pkt + sizeof(struct ethhdr) + ip->ihl * 4);
+      bool processed = ping_reply(eth, ip, icmp, &stats, i, rx_ring, tx_ring);
       wmb();
-      datapath_clean(&pkt_ctx,processed, i, rx_ring, tx_ring);
+      rx_ring[i].wb.status_error &= ~IXGBE_RXD_STAT_DD;
+      rx_ring[i].read.pkt_addr = (u64)ixgbe_adapter.rx_base_phy + (256 * 1024) + (i * 2048);
+      rx_ring[i].read.hdr_addr = 0;
+      wmb();
       i = IXGBE_BUFFER_ADVANCE(i, 1);
-    } 
-    }
+      if(unlikely(!processed)){
+        continue;
+      }
+      if(unlikely(stats.batch_tx_counter >= stats.batch_tx_transmit)){
+      ixgbe_write_reg(&ixgbe_adapter, IXGBE_TDT, i);
+      stats.batch_tx_counter = 0;
+      } else {
+      stats.batch_tx_counter++;
+      }
+      }
+  }
 }
