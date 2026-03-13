@@ -1,12 +1,15 @@
 #include <errno.h>
 #include <linux/if_ether.h>
 #include <stdbool.h>
+#include <stdio.h>
 #include <unistd.h>
 #include <arpa/inet.h>
 #include <xmmintrin.h>
 #include <netinet/ip.h>
 #include <netinet/if_ether.h>
 #include <netinet/ip_icmp.h>
+#include <signal.h>
+#include <x86intrin.h>
 
 #include "../selftests/selftests.h"
 #include "base.h"
@@ -16,8 +19,13 @@
 #include "datapath.h"
 struct hw ixgbe_adapter __attribute__((aligned(64))) = {0};
 static struct ixgbe_stats stats = {0};
-
+volatile sig_atomic_t run = true;
+static u64 cycle_samples[99999999]; 
+void handle_sigint(int sig) {
+    run = false;
+}
 int main(const int argc, char** argv) {
+  signal(SIGINT, handle_sigint);
   int err;
   err = ixgbe_test_ds();
   if (unlikely(err != 0)) {
@@ -79,10 +87,13 @@ int main(const int argc, char** argv) {
   */
   stats.batch_tx_transmit = 0;
   u32 i = ixgbe_read_reg(&ixgbe_adapter, IXGBE_RDH);
-  while(1){
+  static u32 sample_idx = 0;
+  while(run){
     barrier();
     if(likely(rx_ring[i].wb.status_error & IXGBE_RXD_STAT_DD)){
       rmb();
+      u64 start_cycles, end_cycles;
+      start_cycles = __rdtsc();
       stats.batch_manage_tail_counter++;
       stats.total_packets++;
       /* Packet parsing logic is added temporarily to prove pointer arithmatics on structures.
@@ -131,6 +142,12 @@ int main(const int argc, char** argv) {
       } else {
       stats.batch_tx_counter++;
       }
+      end_cycles = __rdtsc();
+      cycle_samples[sample_idx] = end_cycles - start_cycles;
+      sample_idx++;
       }
   }
+  for(u64 j = 0; j < (sample_idx ); j++) {
+    printf("%lu\n", cycle_samples[j]);
+}
 }
