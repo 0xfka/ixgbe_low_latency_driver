@@ -106,7 +106,7 @@ int main(const int argc, char** argv) {
       stats.batch_manage_tail_counter++;
       stats.total_packets++;
       if(unlikely(((tx_clean - tx_write -1) & (BUFFER_NUMBER - 1))<= stats.batch_manage_tail)){
-        while (tx_ring[tx_clean].data_wb.sta & IXGBE_RXD_STAT_DD) {
+        if (tx_ring[tx_clean].data_wb.sta & IXGBE_RXD_STAT_DD) {
         tx_ring[tx_clean].data_wb.sta &= ~IXGBE_RXD_STAT_DD;
         tx_clean = (tx_clean + 1) & (BUFFER_NUMBER -1);
         }
