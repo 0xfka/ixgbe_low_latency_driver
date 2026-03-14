@@ -115,8 +115,24 @@ int main(const int argc, char** argv) {
       * Since the driver cannot reply ARP's, static ARP configuration needed.
       */
       u8* pkt = (u8*)ixgbe_adapter.rx_base + (256 * 1024) + ( i * 2048);
+      u16 pkt_len = rx_ring[i].wb.length;
+      if(unlikely(pkt_len < sizeof(struct ethhdr) +sizeof(struct iphdr))){
+        rx_ring[i].wb.status_error &= ~IXGBE_RXD_STAT_DD;
+        stats.drop++;
+        wmb();
+        i = (i + 1) & (BUFFER_NUMBER -1);
+        continue;
+      }
       struct ethhdr *eth = (struct ethhdr *)pkt;
       struct iphdr *ip = (struct iphdr *)(pkt + sizeof(struct ethhdr));
+      u16 given_len = ip->ihl *4;
+      if(unlikely(given_len < sizeof(struct iphdr) || given_len > 60)){
+        rx_ring[i].wb.status_error &= ~IXGBE_RXD_STAT_DD;
+        stats.drop++;
+        wmb();
+        i = (i + 1) & (BUFFER_NUMBER -1);
+        continue;
+      }
       stats.total_bytes_rx = stats.total_bytes_rx + ip->tot_len;
       if(unlikely(stats.batch_manage_tail_counter >= stats.batch_manage_tail)){
         ixgbe_write_reg(&ixgbe_adapter, IXGBE_RDT, i);
@@ -143,6 +159,14 @@ int main(const int argc, char** argv) {
         continue;
       }
       struct icmphdr *icmp = NULL;
+      u16 icmp_check = sizeof(struct ethhdr) + given_len + sizeof(struct icmphdr);
+      if(unlikely(pkt_len < icmp_check)){
+        rx_ring[i].wb.status_error &= ~IXGBE_RXD_STAT_DD;
+        stats.drop++;
+        wmb();
+        i = (i + 1) & (BUFFER_NUMBER -1);
+        continue;
+      }
       if(likely(pass == true)) {icmp = (struct icmphdr *)(pkt + sizeof(struct ethhdr) + ip->ihl * 4);}
       if(likely(pass == true)) {processed = ping_reply(eth, ip, icmp, &stats, tx_write, rx_ring, tx_ring);}
       wmb();
