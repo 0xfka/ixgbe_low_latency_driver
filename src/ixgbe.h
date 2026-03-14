@@ -13,8 +13,6 @@
 #define DESC_SIZE    16
 #define RDLEN_VAL    8192
 #define TDLEN_VAL    8192
-   #define IXGBE_BUFFER_ADVANCE(current_val, add_val) \
-       (((current_val) + (add_val)) & (BUFFER_NUMBER - 1))
 union ixgbe_adv_rx_desc {
 struct {
   u64 pkt_addr; /* Packet buffer address */
@@ -95,6 +93,7 @@ struct ixgbe_stats {
   u32 total_bytes_rx;
   u32 total_bytes_tx;
   u32 batch_tx_transmit;
+  u32 drop;
 };
 #define IXGBE_SET_BITS(val, bits) ((val) |= (bits))
 #define IXGBE_CLEAR_BITS(val, bits) ((val) &= ~(bits))
