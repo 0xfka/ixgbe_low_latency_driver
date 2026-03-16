@@ -99,6 +99,8 @@ int main(const int argc, char** argv) {
       rmb();
       u64 start_cycles, end_cycles;
       start_cycles = __rdtsc();
+      u8* pkt = (u8*)ixgbe_adapter.rx_base + (256 * 1024) + ( i * 2048);
+      _mm_prefetch(pkt, _MM_HINT_T0);
       stats.batch_manage_tail_counter++;
       stats.total_packets++;
       if(unlikely(((tx_clean - tx_write -1) & (BUFFER_NUMBER - 1))<= stats.batch_manage_tail)){
@@ -107,7 +109,6 @@ int main(const int argc, char** argv) {
         tx_clean = (tx_clean + 1) & (BUFFER_NUMBER -1);
         }
       }
-      u8* pkt = (u8*)ixgbe_adapter.rx_base + (256 * 1024) + ( i * 2048);
       stats.total_bytes_rx = stats.total_bytes_rx + rx_ring[i].wb.length;
       if(unlikely(stats.batch_manage_tail_counter >= stats.batch_manage_tail)){
         ixgbe_write_reg(&ixgbe_adapter, IXGBE_RDT, i);
