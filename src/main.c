@@ -145,4 +145,5 @@ int main(const int argc, char** argv) {
       }
   }
   hdr_percentiles_print(latency_hist, stdout, 5, 1.0, CLASSIC);
+  hdr_close(latency_hist);
 }
