@@ -165,10 +165,7 @@ int main(const int argc, char** argv) {
         break;
         }
         default:{
-        rx_ring[i].wb.status_error &= ~IXGBE_RXD_STAT_DD;
-        i = (i + 1) & ( BUFFER_NUMBER -1 );
-        wmb();
-        stats.irrelevant_packets++;
+        stats.irrelevant_messages++;
         break;
         }
       }

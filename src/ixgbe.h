@@ -89,6 +89,7 @@ struct ixgbe_stats {
   u32 batch_manage_tail_counter;
   u32 total_packets;
   u32 irrelevant_packets;
+  u32 irrelevant_messages;
   u32 batch_tx_counter;
   u32 total_bytes_rx;
   u32 total_bytes_tx;
