@@ -129,6 +129,10 @@ int main(const int argc, char** argv) {
         continue;
       }
       #ifdef pre_market
+      static bool seqnum_first_pkt = true;
+      static bool sessionid_first_pkt = true;
+      static u32 expected_session_id;
+      static u64 expected_seqnum;
       if(unlikely(tp->mesg_count <= 0)){
         rx_ring[i].wb.status_error &= ~IXGBE_RXD_STAT_DD;
         wmb();
@@ -136,6 +140,21 @@ int main(const int argc, char** argv) {
         stats.irrelevant_packets++;
         continue;
       }
+      if(unlikely(sessionid_first_pkt)){
+        expected_session_id = tp->session_id;
+        sessionid_first_pkt = false;
+      }
+      if(unlikely(seqnum_first_pkt)){
+        expected_seqnum = tp->first_mesg_seq_num;
+        seqnum_first_pkt = false;
+      }
+      if(unlikely(tp->first_mesg_seq_num != expected_seqnum)){
+        run = false;
+      }
+      if(unlikely(tp->session_id != expected_session_id)){
+        run = false;
+      }
+      expected_seqnum += tp->mesg_count;
       u8* msg = (u8*)tp + sizeof(struct IEX_TP_header); 
       for(u32 m = 0; m < tp->mesg_count; m++){
       u16 msg_len = *(u16*)msg;
