@@ -102,14 +102,13 @@ Some of these designs are documented in this file, or at the /docs directory.
 Contributing
 ============
 Github Pull requests and/or issues section(s) may be used for contributing/feature request/questions or more.
-pre-commit is covering the basics before sending patches. To add,
+Environment setup script handles pre-commit and blame for now, and may more in future. 
 
 .. code-block:: console
 
-    # Change where git looks for pre-commits, directory-wide only.
-    git config core.hooksPath .githooks
-    # Allow the script to be executed
-    chmod +x .githooks/pre-commit
+    # Yes, that's all. All the configurations made is project-wide and will not affect your configurations.
+    ./setup-env.sh
+
     
 [1] Mellanox Firmware Design Architecture, see Programmer's Reference Manual. Could not refer to a topic or page because it's mentioned in many. Note that PRM's are not public, but ConnectX-4.
 
