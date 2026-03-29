@@ -1,3 +1,4 @@
+#define _GNU_SOURCE
 #include <arpa/inet.h>
 #include <errno.h>
 #include <linux/if_ether.h>
@@ -24,6 +25,13 @@ void handle_sigint(int sig) { run = false; }
 int main(const int argc, char** argv) {
   signal(SIGINT, handle_sigint);
   int err;
+  cpu_set_t cpuset;
+  CPU_ZERO(&cpuset);
+  CPU_SET(0, &cpuset);
+  err = CPU_ISSET(0, &cpuset);
+  if (unlikely(sched_setaffinity(0, sizeof(cpu_set_t), &cpuset) != 0)) {
+    return errno;
+  }
   err = ixgbe_test_ds();
   if (unlikely(err != 0)) {
     return -err;
