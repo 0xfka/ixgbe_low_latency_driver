@@ -3,6 +3,7 @@
 #include <errno.h>
 #include <linux/if_ether.h>
 #include <netinet/in.h>
+#include <pthread.h>
 #include <sched.h>
 #include <signal.h>
 #include <stdbool.h>
@@ -18,6 +19,7 @@
 #include "hw.h"
 #include "iex.h"
 #include "ixgbe.h"
+#include "management.h"
 #include "pci.h"
 struct hw ixgbe_adapter __attribute__((aligned(64))) = {0};
 static struct ixgbe_stats stats = {0};
@@ -91,6 +93,14 @@ int main(const int argc, char** argv) {
   u32 read_val = ixgbe_read_reg(&ixgbe_adapter, IXGBE_AUTOC);
   IXGBE_SET_BITS(read_val, IXGBE_AUTOC_RESTART);
   ixgbe_write_reg(&ixgbe_adapter, IXGBE_AUTOC, read_val);
+  pthread_t thread_management;
+  cpu_set_t cpuset_management;
+  u8 core_id = 1;
+  pthread_create(&thread_management, NULL, management_entrypoint, NULL);
+  CPU_ZERO(&cpuset_management);
+  CPU_SET(core_id, &cpuset_management);
+  pthread_setaffinity_np(thread_management, sizeof(cpu_set_t),
+                         &cpuset_management);
   /* This register is used for updating ring buffer location on every x bytes.
    * 128 is a placeholder, a number will be decided after benchmarks. */
   stats.batch_manage_tail = 128;

@@ -7,7 +7,7 @@ Installation
 ============
 Prerequisites
 ^^^^^^^^^^^^^
-*    **1 x 2 MB hugepage**
+*    **2 x 2 MB hugepage**
 add via command:
 
 .. code-block:: console
