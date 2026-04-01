@@ -7,11 +7,13 @@
  * without affecting the producer core.
  */
 #include <assert.h>
+#include <emmintrin.h>
 #include <errno.h>
 #include <sched.h>
 #include <stdio.h>
 #include <string.h>
 #include <sys/mman.h>
+#include <unistd.h>
 
 #include "base.h"
 /* 2 MB hugepage. */
@@ -30,28 +32,39 @@ struct spsc_ring_hugepage_layout {
 };
 static_assert((sizeof(struct spsc_ring_hugepage_layout) == 2097152),
               "Hugepage layout is unequal to 2 MB's\n");
-
+static inline bool spsc_push(struct spsc_ring_hugepage_layout* ring,
+                             struct management* data) {
+  if (unlikely(((ring->tail + 1) & (MGMT_SPSC_BUFFER_NUMBER - 1)) ==
+               ring->head)) {
+    return false;
+  }
+  ring->buffer[ring->tail] = *data;
+  wmb();
+  ring->tail = (ring->tail + 1) & (MGMT_SPSC_BUFFER_NUMBER - 1);
+  return true;
+}
+static inline void spsc_poll(struct spsc_ring_hugepage_layout* ring) {
+  while (1) {
+    while (ring->head == ring->tail) {
+      _mm_pause();
+    }
+    struct management data = ring->buffer[ring->head];
+    rmb();
+    printf("data is %lu\n", data.test_data);
+    usleep(1000);
+    ring->head = (ring->head + 1) & (MGMT_SPSC_BUFFER_NUMBER - 1);
+  }
+}
 /* management_entrypoint() - Handles SPSC lockless ring buffer between data path
  * and management.
  */
-static inline void* management_entrypoint() {
-  if (unlikely(sizeof(struct spsc_ring_hugepage_layout) != 2097152)) {
-    return (void*)EINVAL;
-  }
-  void* hugepage = mmap(NULL, 2 * 1024 * 1024, PROT_READ | PROT_WRITE,
-                        MAP_PRIVATE | MAP_ANONYMOUS | MAP_HUGETLB, -1, 0);
-  if (unlikely(hugepage == MAP_FAILED)) {
-    int save_errno = errno;
-    /* Added (long) for preventing compiler from yelling about it.
-     * Just use gdb.*/
-    return (void*)(long)errno;
-  };
-  /* mmap may act lazy when allocating it. */
-  memset(hugepage, 0, 2 * 1024 * 1024);
+static inline void* management_entrypoint(void* arg) {
+  struct spsc_ring_hugepage_layout* spsc =
+      (struct spsc_ring_hugepage_layout*)arg;
+  printf("Thread sees ring at: %p\n", (void*)spsc);
   /* Calculating memory addresses of every buffer on SPSC ring buffer.
    * Prevents overhead on runtime with compile-time calculations. */
-  struct spsc_ring_hugepage_layout* layout =
-      (struct spsc_ring_hugepage_layout*)(hugepage);
+  spsc_poll(spsc);
   return 0;
 }
 #endif
