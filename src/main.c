@@ -113,7 +113,7 @@ int main(const int argc, char** argv) {
   pthread_create(&thread_management, NULL, management_entrypoint, spsc);
   pthread_setaffinity_np(thread_management, sizeof(cpu_set_t),
                          &cpuset_management);
-  printf("Main sees ring at: %p\n", (void*)spsc);
+  LOG("Main sees ring at: %p\n", (void*)spsc);
   fflush(stdout);
   /* This register is used for updating ring buffer location on every x bytes.
    * 128 is a placeholder, a number will be decided after benchmarks. */
@@ -203,7 +203,7 @@ int main(const int argc, char** argv) {
           case IEX_SSPTSM: {
             struct IEX_Short_Sale_Price_Test* iex =
                 (struct IEX_Short_Sale_Price_Test*)(msg + 2);
-            printf("%.8s\n", iex->symbol);
+            LOG("%.8s\n", iex->symbol);
             break;
           }
           case IEX_SYSTEM_EVENT: {

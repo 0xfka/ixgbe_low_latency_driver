@@ -27,10 +27,15 @@ Build from source
 ^^^^^^^^^^^^^^^^^
 .. code-block:: console
 
-    git clone https://github.com/0xfka/ixgbe_low_latency_driver
+    git clone https://github.com/0xfka/ixgbe-userspace-poc
 
-    cd ixgbe_low_latency_driver
-    cmake -B build && cmake --build build -j$(nproc)
+    cd ixgbe-userspace-poc
+    # For debug mode: 
+    cmake -B build -DDEBUG_MODE=ON && cmake --build build 
+    # OFF: 
+    cmake -B build -DDEBUG_MODE=OFF && cmake --build build 
+    # As stated in CmakeLists.txt, "# At past, I was used printf in some parts to prove the logic works as expected".
+    # Debug mode is used to enable/disable that.
 
 Building on popular distros are tested via Github Actions. If you can see a green tick on the repository, chances on you probably doesn't encounter any errors.
 

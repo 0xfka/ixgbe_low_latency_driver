@@ -1,7 +1,7 @@
 #ifndef BASE_H
 #define BASE_H
-#include <stdint.h>
 #include <stdbool.h>
+#include <stdint.h>
 
 #define CORE_DATAPATH 0
 #define CORE_MANAGEMENT 1
@@ -17,4 +17,9 @@ typedef uint64_t u64;
 
 #define likely(x) __builtin_expect(!!(x), 1)
 #define unlikely(x) __builtin_expect(!!(x), 0)
+#ifdef DEBUG_MODE
+#define LOG(msg, ...) printf(msg "\n")
+#else
+#define LOG(msg, ...) ((void)0)
+#endif
 #endif

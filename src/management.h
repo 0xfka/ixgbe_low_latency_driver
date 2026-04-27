@@ -50,7 +50,7 @@ static inline void spsc_poll(struct spsc_ring_hugepage_layout* ring) {
     }
     struct management data = ring->buffer[ring->head];
     rmb();
-    printf("data is %lu\n", data.test_data);
+    LOG("data is %lu\n", data.test_data);
     usleep(1000);
     ring->head = (ring->head + 1) & (MGMT_SPSC_BUFFER_NUMBER - 1);
   }
@@ -61,7 +61,7 @@ static inline void spsc_poll(struct spsc_ring_hugepage_layout* ring) {
 static inline void* management_entrypoint(void* arg) {
   struct spsc_ring_hugepage_layout* spsc =
       (struct spsc_ring_hugepage_layout*)arg;
-  printf("Thread sees ring at: %p\n", (void*)spsc);
+  LOG("Thread sees ring at: %p\n", (void*)spsc);
   /* Calculating memory addresses of every buffer on SPSC ring buffer.
    * Prevents overhead on runtime with compile-time calculations. */
   spsc_poll(spsc);
